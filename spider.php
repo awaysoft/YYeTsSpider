@@ -111,6 +111,7 @@ function update_list($list, $m_type) {
             update_item($item, $m_type);
         }
     }
+    return true;
 }
 
 function update_item($item, $m_type) {
