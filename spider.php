@@ -44,8 +44,8 @@ function catchList() {
     );
 
     /* 开始抓取 */
-    foreach ($urls as $type => $url) {
-        spider_log("Catching type:{$type}");
+    foreach ($urls as $m_type => $url) {
+        spider_log("Catching type:{$m_type}");
         /* 抓取第一页，获取信息 */
         $pUrl = $url . '1';
         $first_page_content = curl_get($pUrl);
@@ -54,16 +54,18 @@ function catchList() {
 
         /* 获取总页数 */
         $max_page = $first_page['max_page'];
-        update_list($first_page, $type);
+        update_list($first_page, $m_type);
         spider_log("max_page:{$max_page}");
 
         $page = 2;
         /* 开始抓取其它页 */
         while($page <= $max_page) {
-            spider_log("Catching type: {$type}, page: {$page}, max_page: {$max_page}");
+            spider_log("Catching type: {$m_type}, page: {$page}, max_page: {$max_page}");
             $content = curl_get($url . $page);
             $page_obj = parse_list($content);
-            update_list($page_obj, $type);
+            if (!update_list($page_obj, $m_type)) {
+                spider_log("Error Update List, type: {$m_type}, page: {$page}");
+            }
 
             $page ++;
         }
@@ -100,37 +102,53 @@ function parse_list($content, $first = false) {
     return $page_obj;
 }
 
-function update_list($list, $type) {
+function update_list($list, $m_type) {
     if (!$list) return false;
 
     $items = $list['items'];
     if (is_array($items)) {
         foreach($items as $item) {
-            update_item($item, $type);
+            update_item($item, $m_type);
         }
     }
 }
 
-function update_item($item, $type) {
+function update_item($item, $m_type) {
     global $conn;
     $yid = pg_escape_string($item['yid']);
     $name = pg_escape_string($item['name']);
     /* 检查之前是否存在 */
     $sql = "SELECT * FROM movies where yid = '{$yid}';";
-    $result = pg_query($sql);
+    $result = pg_query($conn, $sql);
     $row = pg_fetch_array($result);
     /* 存在就更新 */
     if ($row) {
-        spider_log("Updating {$item['yid']}, name:{$item['name']}");
-        $sql = "UPDATE movies SET yid='{$yid}', name='{$name}', type='{$type}' WHERE mid='{$row['mid']}'";
+        spider_log("Updating {$item['yid']}, name:{$item['name']}, type:{$m_type}");
+        $sql = "UPDATE movies SET yid='{$yid}', name='{$name}', type='{$m_type}' WHERE mid='{$row['mid']}'";
+        if ($row['type'] != $m_type) spider_log('Error:type is error!');
     } else {
-        spider_log("Adding {$item['yid']}, name:{$item['name']}");
-        $sql = "INSERT INTO movies (yid, name, type) VALUES('{$yid}', '{$name}', '{$type}');";
+        spider_log("Adding {$item['yid']}, name:{$item['name']}, type:{$m_type}");
+        $sql = "INSERT INTO movies (yid, name, type) VALUES('{$yid}', '{$name}', '{$m_type}');";
     }
     pg_query($conn, $sql) or spider_log("ERROR SQL:{$sql}");
 }
 
+function parse_page($content, $type) {
+    /* 电影和公开课 */
+    if ($type == 0 || $type == 3) {
+
+    } else {
+    /* 电视剧和纪录片 */
+
+    }
+}
+
 function spider_log($str) {
+    static $fd = null;
+    if (!$fd) {
+        $fd = fopen('log.log', "w");
+    }
     $log_string = sprintf("[%s]:%s\n", date('Y-m-d h:i:s'), $str);
     echo $log_string;
+    fprintf($fd, $log_string);
 }
