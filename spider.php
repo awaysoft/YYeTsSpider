@@ -218,7 +218,10 @@ function parse_page($content) {
     if (preg_match($info_regex, $content, $matches) === 1) {
         $info_content = trim($matches[1]);
         $page_obj['info'] = parse_page_info($info_content);
+    } else {
+        spider_log("Error, page no content!");
     }
+    spider_log("Parsing Page: {$page_obj['info']['ename']}");
     $page_obj['links'] = parse_page_link($content);
     return $page_obj;
 }
