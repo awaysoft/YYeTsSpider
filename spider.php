@@ -32,7 +32,7 @@ function ListController() {
     if (param_count() > 1) {
         $page = (int) param_get(2);
     }
-    catch_list();
+    catch_list($page);
 }
 
 function PageController() {
@@ -40,7 +40,7 @@ function PageController() {
     if (param_count() > 1) {
         $page = (int) param_get(2);
     }
-    catch_page();
+    catch_page($page);
 }
 
 function AllController() {
@@ -97,7 +97,7 @@ function catch_page($page = 1) {
                 /* @Todo 修改这里为你已经登录的Cookie */
                 'Cookie' => 'last_item:26208=%E8%AE%B2%E4%B9%89%E4%B8%8B%E8%BD%BD; last_item_date:26208=1416920713; CNZZDATA3546884=cnzz_eid%3D509708039-1416913247-%26ntime%3D1417010548; mykeywords=a%3A3%3A%7Bi%3A0%3Bs%3A30%3A%22%E7%BE%8E%E5%9B%BD%E7%8E%B0%E4%BB%A3%E4%B8%BB%E4%B9%89%E6%96%87%E5%AD%A6%E9%80%89%E8%AF%BB%22%3Bi%3A1%3Bs%3A24%3A%22%E5%B8%8C%E7%89%B9%E5%8B%92%E5%A4%B1%E8%90%BD%E7%9A%84%E6%BD%9C%E8%89%87%22%3Bi%3A2%3Bs%3A12%3A%22%E7%BB%BF%E8%89%B2%E6%98%9F%E7%90%83%22%3B%7D; yy_pop3=0-1417013814945; yy_rich=3; PHPSESSID=ae14q8i3vmori1ilho37g8hqk7; yyets_slide_ad=1; GINFO=uid%3D3402957%26nickname%3Dyanjingtao%26group_id%3D1%26avatar_t%3Dhttp%3A%2F%2Ftu.rrsub.com%3A8014%2Fftp%2Favatar%2Ff_noavatar_t.gif%26main_group_id%3D0%26common_group_id%3D52; GKEY=fb39b9df69e7365509d3532cdcd24791c2e9fa626bd1652890e530c86ddcf8d6'
             );
-            $content = curl_get_with_ip($url . $row['yid'], '116.251.210.245', $header);
+            $content = http_get_with_ip($url . $row['yid'], '116.251.210.245', $header);
             if ($content) {
                 break;
             }
@@ -122,7 +122,7 @@ function catch_list($page = 2) {
 
     /* 开始抓取 */
     /* 抓取第一页，获取信息 */
-    $first_page_content = curl_get_with_ip($url . '1', '116.251.210.245');
+    $first_page_content = http_get_with_ip($url . '1', '116.251.210.245');
     $first_page = parse_list($first_page_content, true);
     if (!$first_page) continue;
 
@@ -135,7 +135,7 @@ function catch_list($page = 2) {
     $retry_count = 0;
     while($page <= $max_page) {
         spider_log("Catching page: {$page}, max_page: {$max_page}");
-        $content = curl_get_with_ip($url . $page, '116.251.210.245');
+        $content = http_get_with_ip($url . $page, '116.251.210.245');
         $page_obj = parse_list($content);
         if (!update_list($page_obj)) {
             spider_log("Error Update List, page: {$page}");
