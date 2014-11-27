@@ -37,10 +37,14 @@ function ListController() {
 
 function PageController() {
     $page = 0;
+    $no_catch = false;
     if (param_count() > 1) {
         $page = (int) param_get(2);
+        if (param_get(2) === 'nocatch') {
+            $no_catch = true;
+        }
     }
-    catch_page($page);
+    catch_page($page, $no_catch);
 }
 
 function AllController() {
@@ -54,11 +58,11 @@ YYeTs Spider v0.1
 Usage: php spider.php [options]
 
 Options:
-    all             Catch ALl, include all list and page.
-    list [pagenum]  Catch only list, start from pagenum.
-    page [pagenum]  Catch only page, start from pagenum.
-    help            Show this help.
-    version         Show version infomation.
+    all                     Catch ALl, include all list and page.
+    list [pagenum]          Catch only list, start from pagenum.
+    page [pagenum|nocatch]  Catch only page, start from pagenum or only catch no catch page.
+    help                    Show this help.
+    version                 Show version infomation.
 
 EOT;
 }
@@ -78,11 +82,14 @@ function init() {
     $conn = pg_connect($conn_string) or die('Connect Database Error!');
 }
 
-function catch_page($page = 1) {
+function catch_page($page = 1, $no_catch = false) {
     global $conn;
     $url = 'http://www.yyets.com/resource/';
     
     $sql = 'select mid, yid from movies';
+    if ($no_catch) {
+        $sql .= ' where mtype is null';
+    }
     $result = pg_query($conn, $sql);
     $position = 1;
     while (($row = pg_fetch_array($result))) {
